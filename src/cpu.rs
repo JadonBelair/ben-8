@@ -50,7 +50,6 @@ pub struct Cpu {
     pub cf: bool,
     pub zf: bool,
     pub microcode: Vec<u16>,
-    pub ctrl_word: u16,
     pub step: usize,
     pub bus: u8,
     pub halted: bool
@@ -141,7 +140,6 @@ impl Cpu {
             cf: false,
             zf: false,
             microcode,
-            ctrl_word: 0,
             step: 0,
             bus: 0,
             halted: false
@@ -154,7 +152,6 @@ impl Cpu {
         self.pc = 0;
         self.mar = 0;
         self.bus = 0;
-        self.ctrl_word = 0;
         self.halted = false;
         self.output = 0;
         self.step = 0;
@@ -235,68 +232,68 @@ impl Cpu {
 
             self.bus = 0;
 
-            self.ctrl_word = self.microcode[self.get_micro_loc()];
+            let ctrl_word = self.microcode[self.get_micro_loc()];
             
             self.alu();
 
-            if (self.ctrl_word & FI) != 0 {
+            if (ctrl_word & FI) != 0 {
                 self.zf = self.alu() == 0;
                 self.cf = self.alu() < self.a;
             }
 
-            if (self.ctrl_word & CO) != 0 {
+            if (ctrl_word & CO) != 0 {
                 self.bus = self.pc;
             }
 
-            if (self.ctrl_word & EO) != 0 {
+            if (ctrl_word & EO) != 0 {
                 self.bus = self.alu();
             }
 
-            if (self.ctrl_word & AO) != 0 {
+            if (ctrl_word & AO) != 0 {
                 self.bus = self.a;
             }
 
-            if (self.ctrl_word & IO) != 0 {
+            if (ctrl_word & IO) != 0 {
                 self.bus = self.ir & 0xF;
             }
 
-            if (self.ctrl_word & RO) != 0 {
+            if (ctrl_word & RO) != 0 {
                 self.bus = self.ram[self.mar];
             }
 
-            if (self.ctrl_word & J) != 0 {
+            if (ctrl_word & J) != 0 {
                 self.pc = self.bus;
             }
 
-            if (self.ctrl_word & CE) != 0 {
+            if (ctrl_word & CE) != 0 {
                 self.pc = (self.pc + 1) & 0xF;
             }
 
-            if (self.ctrl_word & OI) != 0 {
+            if (ctrl_word & OI) != 0 {
                 self.output = self.bus;
             }
 
-            if (self.ctrl_word & BI) != 0 {
+            if (ctrl_word & BI) != 0 {
                 self.b = self.bus;
             }
 
-            if (self.ctrl_word & AI) != 0 {
+            if (ctrl_word & AI) != 0 {
                 self.a = self.bus;
             }
 
-            if (self.ctrl_word & II) != 0 {
+            if (ctrl_word & II) != 0 {
                 self.ir = self.bus;
             }
 
-            if (self.ctrl_word & RI) != 0 {
+            if (ctrl_word & RI) != 0 {
                 self.ram[self.mar] = self.bus;
             }
 
-            if (self.ctrl_word & MI) != 0 {
+            if (ctrl_word & MI) != 0 {
                 self.mar = self.bus.into();
             }
 
-            if (self.ctrl_word & HLT) != 0 {
+            if (ctrl_word & HLT) != 0 {
                 self.halted = true;
             }
 
@@ -306,7 +303,7 @@ impl Cpu {
 
     pub fn alu(&mut self) -> u8 {
 
-        let rhs = if (self.ctrl_word & SU) != 0 {
+        let rhs = if (self.microcode[self.get_micro_loc()] & SU) != 0 {
             (self.b^0xFF).wrapping_add(1)
         } else {
             self.b
