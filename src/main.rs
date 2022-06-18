@@ -36,6 +36,8 @@ async fn main() {
     let mut clock_speed = Duration::from_millis(clock_speed_val as u64);
     let mut pulse_length = clock_speed / 2;
 
+    let mut view_ram = false;
+
     let mut code = String::new();
 
     let mut cpu = Cpu::new();
@@ -48,18 +50,35 @@ async fn main() {
     loop {
         clear_background(GRAY);
 
+        // used for defining all egui components
         egui_macroquad::ui(|egui_ctx| {
-            egui::Window::new("Edit Code").fixed_rect(Rect { min: [10., 10.].into(), max: [200., 500.].into() })
-            .show(egui_ctx, |ui| {       
-                let code_box = egui::TextEdit::multiline(&mut code)
-                    .font(egui::FontId { size: 30., ..Default::default()})
-                    .desired_rows(16);
-                ui.add(code_box);
+            // draws the code editor to the screen
+            egui::Window::new(if !view_ram {"Edit Code"} else {"View Ram Contents"})
+            .fixed_rect(Rect { min: [10., 10.].into(), max: [210., 500.].into() })
+            .show(egui_ctx, |ui| {
+                if !view_ram {     
+                    let code_box = egui::TextEdit::multiline(&mut code)
+                        .font(egui::FontId { size: 30., ..Default::default()})
+                        .desired_rows(16);
+                    ui.add(code_box);
+                } else {
+                    let mut ram_contents = String::new();
+                    for (i, n) in cpu.ram.iter().enumerate() {
+                        ram_contents += format!("{n:08b} {n:#04X}{}", if i != 15 {"\n"} else {""}).as_str();
+                    }
+
+                    let ram = egui::Label::new(egui::RichText::new(ram_contents).size(30.));
+                    ui.add(ram);
+                }
+
+                if ui.button("Switch Mode").clicked() {
+                    view_ram = !view_ram;
+                };
             });
             
-            egui::Window::new("Controls").fixed_pos((220., 10.)).resizable(false)
+            // draws the control buttons to the screen
+            egui::Window::new("Controls").fixed_pos((230., 10.)).resizable(false)
             .show(egui_ctx, |ui| {
-
                 let clock_btn = egui::Button::new(
                     egui::WidgetText::RichText(
                         egui::RichText::new("Clock Toggle").size(30.)
@@ -69,10 +88,12 @@ async fn main() {
                     egui::WidgetText::RichText(
                         egui::RichText::new("Assemble Code").size(30.)
                     ));
+
                 let reset_btn = egui::Button::new(
                     egui::WidgetText::RichText(
                         egui::RichText::new("Reset").size(30.)
                     ));
+
                 let pulse_btn = egui::Button::new(
                     egui::WidgetText::RichText(
                         egui::RichText::new("Pulse").size(30.)
@@ -95,8 +116,8 @@ async fn main() {
                     pulse_start = Instant::now();
                 }
 
+                // draws the CPU clock speed slider and its label next to each other
                 ui.horizontal(|ui| {
-
                     ui.label("CPU Speed");
                     let speed = egui::DragValue::new(&mut clock_speed_val).clamp_range(16..=1000);
                     ui.add(speed);
@@ -104,6 +125,7 @@ async fn main() {
             });
         });
 
+        // draws the ui
         egui_macroquad::draw();
 
         if clock_speed_val as u128 != clock_speed.as_millis() {
@@ -128,7 +150,7 @@ async fn main() {
         // LED DRAWING
 
         // draws the clock pulse
-        draw_led(if pulse_start.elapsed() < pulse_length {1} else {0}, 330, 165,
+        draw_led(if pulse_start.elapsed() < pulse_length {1} else {0}, 340, 165,
             Color::new(0., 0., 0.51, 1.),
             Color::new(0., 0., 1., 1.), 1);
 
@@ -158,32 +180,32 @@ async fn main() {
             Color::new(1., 0., 0., 1.), 8);
 
         // draws the value of the MAR (memory address register)
-        draw_led(cpu.mar as u16, 290, 300,
+        draw_led(cpu.mar as u16, 295, 300,
             Color::new(0.7, 0.7, 0., 1.),
             Color::new(0.95, 1., 0., 1.), 4);
 
         // draws the value at the current memory address
-        draw_led(cpu.ram[cpu.mar] as u16, 240, 350,
+        draw_led(cpu.ram[cpu.mar] as u16, 245, 350,
             Color::new(0.51, 0., 0., 1.),
             Color::new(1., 0., 0., 1.), 8);
 
         // draws the opcode section of the instruction register
-        draw_led(cpu.ir as u16 >> 4, 240, 400,
+        draw_led(cpu.ir as u16 >> 4, 245, 400,
             Color::new(0., 0., 0.51, 1.),
             Color::new(0., 0., 1., 1.), 4);
 
         // draws the addres section of the insruction register
-        draw_led(cpu.ir as u16 & 0xF, 336, 400,
+        draw_led(cpu.ir as u16 & 0xF, 341, 400,
             Color::new(0.7, 0.7, 0., 1.),
             Color::new(0.95, 1., 0., 1.), 4);
 
         // draws the microcode step
-        draw_led(cpu.step as u16, 240, 425,
+        draw_led(cpu.step as u16, 245, 425,
             Color::new(0.51, 0., 0., 1.),
             Color::new(1., 0., 0., 1.), 3);
         
         // draws the microcode step pulse
-        draw_led(((0b10000) >> cpu.step) as u16, 312, 425,
+        draw_led(((0b10000) >> cpu.step) as u16, 317, 425,
             Color::new(0., 1., 0., 1.), 
             Color::new(0., 0.45, 0., 1.), 5);
 
