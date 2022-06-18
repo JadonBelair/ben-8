@@ -164,6 +164,16 @@ async fn main() {
             Color::new(0.51, 0., 0., 1.),
             Color::new(1., 0., 0., 1.), 8);
 
+        // draws the zero flag
+        draw_led(if cpu.zf {1} else {0}, SCREEN_WIDTH as u16 - 56, REGISTER_Y - 40,
+            Color::new(0., 0.45, 0., 1.),
+            Color::new(0., 1., 0., 1.), 1);
+        
+        // draws the carry flag
+        draw_led(if cpu.cf {1} else {0}, SCREEN_WIDTH as u16 - 32, REGISTER_Y - 40,
+            Color::new(0., 0.45, 0., 1.),
+            Color::new(0., 1., 0., 1.), 1);
+
         // draws the a register
         draw_led(cpu.a.into(), REGISTER_X, REGISTER_Y,
             Color::new(0.51, 0., 0., 1.),
