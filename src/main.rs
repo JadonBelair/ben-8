@@ -220,7 +220,7 @@ async fn main() {
             Color::new(0., 0.45, 0., 1.), 5);
 
         // draws the control word
-        draw_led(cpu.microcode[cpu.get_micro_loc()], screen_width() as u16 - 390, screen_height() as u16 - 35,
+        draw_led(cpu.microcode[cpu.get_micro_loc()], SCREEN_WIDTH as u16 - 390, SCREEN_HEIGHT as u16 - 35,
         Color::new(0.51, 0., 0., 1.),
         Color::new(1., 0., 0., 1.), 16);
 
