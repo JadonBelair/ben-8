@@ -158,7 +158,6 @@ impl Cpu {
         self.cf = false;
         self.zf = false;
         self.ir = 0;
-
     }
 
     pub fn assemble(&mut self, code: &String) -> bool {
