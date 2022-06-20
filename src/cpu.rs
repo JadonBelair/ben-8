@@ -160,7 +160,7 @@ impl Cpu {
         self.ir = 0;
     }
 
-    pub fn assemble(&mut self, code: &String) -> bool {
+    pub fn assemble(&mut self, code: &str) -> bool {
 
         let mut temp_ram = [0; 16];
 
@@ -199,17 +199,17 @@ impl Cpu {
                 };
 
                 temp_ram[i] = (opcode << 4) | value;
-            } else if tokens.len() == 0 {
+            } else if tokens.is_empty() {
                 temp_ram[i] = 0;
             } else {
-                return false;
+                return false
             }
         }
 
         self.ram = temp_ram;
         self.reset();
 
-        return true;
+        true
     }
 
     pub fn get_micro_loc(&self) -> usize {
@@ -220,9 +220,7 @@ impl Cpu {
         let opcode = ((self.ir & 0xF0) >> 1) as usize;
         let   step = self.step & 0b111;
 
-        let loc = flags | opcode | step;
-
-        return loc
+        flags | opcode | step
     }
 
     pub fn pulse(&mut self) {
@@ -310,5 +308,11 @@ impl Cpu {
     
         self.a.wrapping_add(rhs)
 
+    }
+}
+
+impl Default for Cpu {
+    fn default() -> Self {
+        Self::new()
     }
 }
